@@ -1,0 +1,138 @@
+from __future__ import annotations
+
+from utils.helpers import utc_now_iso
+
+
+MOCK_NEWS = {
+    "AAPL": [
+        {
+            "source": "Mock Global News",
+            "title": "Apple suppliers signal stable iPhone demand into next quarter",
+            "url": "https://example.com/apple-demand",
+            "published_at": utc_now_iso(),
+            "content": "Suppliers noted resilient iPhone demand and stable premium device orders.",
+            "ticker": "AAPL",
+            "company": "Apple",
+            "source_type": "news",
+        },
+        {
+            "source": "Mock Official Release",
+            "title": "Apple expands AI features in enterprise rollout",
+            "url": "https://example.com/apple-ai",
+            "published_at": utc_now_iso(),
+            "content": "The company announced wider enterprise AI availability and productivity features.",
+            "ticker": "AAPL",
+            "company": "Apple",
+            "source_type": "official",
+        },
+    ],
+    "TSLA": [
+        {
+            "source": "Mock Markets Daily",
+            "title": "Tesla faces fresh margin pressure amid EV discounting",
+            "url": "https://example.com/tesla-margin",
+            "published_at": utc_now_iso(),
+            "content": "Analysts warned that continued discounting may weigh on automotive gross margins.",
+            "ticker": "TSLA",
+            "company": "Tesla",
+            "source_type": "news",
+        },
+        {
+            "source": "Mock X Buzz",
+            "title": "Tesla social sentiment mixed after production chatter",
+            "url": "https://example.com/tesla-x",
+            "published_at": utc_now_iso(),
+            "content": "Posts were mixed, with concerns over margins but optimism on future product pipeline.",
+            "ticker": "TSLA",
+            "company": "Tesla",
+            "source_type": "social",
+        },
+    ],
+    "NVDA": [
+        {
+            "source": "Mock AI Wire",
+            "title": "NVIDIA demand remains strong across hyperscalers",
+            "url": "https://example.com/nvda-demand",
+            "published_at": utc_now_iso(),
+            "content": "Large cloud buyers continue to invest in accelerators and AI infrastructure.",
+            "ticker": "NVDA",
+            "company": "NVIDIA",
+            "source_type": "news",
+        }
+    ],
+    "TCS": [
+        {
+            "source": "Mock Business News",
+            "title": "TCS reports strong Q4 IT services growth in emerging markets",
+            "url": "https://example.com/tcs-growth",
+            "published_at": utc_now_iso(),
+            "content": "Tata Consultancy Services showed robust performance in digital transformation and cloud services.",
+            "ticker": "TCS",
+            "company": "Tata Consultancy Services",
+            "source_type": "news",
+        },
+        {
+            "source": "Mock Financial Times",
+            "title": "TCS expands AI and automation offerings to European clients",
+            "url": "https://example.com/tcs-ai",
+            "published_at": utc_now_iso(),
+            "content": "The company announced new AI-driven solutions for banking and healthcare sectors in Europe.",
+            "ticker": "TCS",
+            "company": "Tata Consultancy Services",
+            "source_type": "official",
+        },
+        {
+            "source": "Mock LinkedIn Pulse",
+            "title": "TCS social sentiment positive after earnings beat",
+            "url": "https://example.com/tcs-social",
+            "published_at": utc_now_iso(),
+            "content": "Industry professionals express optimism about TCS's digital transformation leadership.",
+            "ticker": "TCS",
+            "company": "Tata Consultancy Services",
+            "source_type": "social",
+        },
+    ],
+}
+
+MOCK_PRICES = {
+    "AAPL": {
+        "ticker": "AAPL",
+        "price": 208.15,
+        "prev_close": 205.92,
+        "daily_return": 0.0108,
+        "volume": 65400000,
+        "avg_volume": 59000000,
+        "volatility_20d": 0.019,
+        "momentum_5d": 0.024,
+    },
+    "TSLA": {
+        "ticker": "TSLA",
+        "price": 163.80,
+        "prev_close": 167.40,
+        "daily_return": -0.0215,
+        "volume": 112000000,
+        "avg_volume": 95000000,
+        "volatility_20d": 0.041,
+        "momentum_5d": -0.038,
+    },
+    "NVDA": {
+        "ticker": "NVDA",
+        "price": 944.10,
+        "prev_close": 931.55,
+        "daily_return": 0.0135,
+        "volume": 52000000,
+        "avg_volume": 48000000,
+        "volatility_20d": 0.032,
+        "momentum_5d": 0.052,
+    },
+    "TCS": {
+        "ticker": "TCS",
+        "price": 4250.75,
+        "prev_close": 4180.30,
+        "daily_return": 0.0168,
+        "volume": 2100000,
+        "avg_volume": 1800000,
+        "volatility_20d": 0.015,
+        "momentum_5d": 0.028,
+    },
+}
