@@ -24,6 +24,10 @@ if st.button("Analyze company", type="primary"):
             "instead of using dummy mock news. Check NewsAPI credentials, API quota, Yahoo Finance RSS availability, "
             "and Streamlit secrets."
         )
+        if result.diagnostics:
+            with st.expander("Live evidence diagnostics"):
+                for item in result.diagnostics:
+                    st.write(f"- {item}")
 
     st.subheader("Drivers")
     for item in result.prediction.drivers:

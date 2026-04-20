@@ -58,3 +58,4 @@ class ChatAnswer(BaseModel):
     answer: str
     prediction: PredictionResult
     evidence: list[SentimentRecord]
+    diagnostics: list[str] = Field(default_factory=list)

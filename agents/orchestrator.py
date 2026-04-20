@@ -25,4 +25,9 @@ class StockAnalysisOrchestrator:
             sentiments=sentiments,
         )
         answer = self.explanation_agent.generate(prediction=prediction, evidence=sentiments)
-        return ChatAnswer(answer=answer, prediction=prediction, evidence=sentiments)
+        return ChatAnswer(
+            answer=answer,
+            prediction=prediction,
+            evidence=sentiments,
+            diagnostics=self.news_agent.diagnostics,
+        )

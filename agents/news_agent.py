@@ -12,10 +12,12 @@ class NewsAgent:
         self.news_service = NewsService()
         self.official_service = OfficialSourceService()
         self.x_service = XService()
+        self.diagnostics: list[str] = []
 
     def collect(self, ticker: str, company: str) -> list[NewsItem]:
         records: list[NewsItem] = []
         records.extend(self.news_service.search(query=company, ticker=ticker))
+        self.diagnostics = list(self.news_service.diagnostics)
         records.extend(self.official_service.fetch_company_updates(ticker))
         records.extend(self.x_service.search_posts(ticker=ticker, query=company))
         deduped = dedupe_records([item.model_dump() for item in records])
