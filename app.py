@@ -52,4 +52,4 @@ with col2:
     st.subheader("Current watchlist")
     st.dataframe({"Ticker": st.session_state.watchlist}, width="stretch", hide_index=True)
 
-st.info("Open the pages from the left sidebar: Dashboard, Chat, Company Analysis, Backtest, and ML Forecast.")
+st.info("Open the pages from the left sidebar: Dashboard, Chat, Company Analysis, Backtest, ML Forecast, and Advanced Screener.")

@@ -59,3 +59,61 @@ class ChatAnswer(BaseModel):
     prediction: PredictionResult
     evidence: list[SentimentRecord]
     diagnostics: list[str] = Field(default_factory=list)
+
+
+class PlannedTask(BaseModel):
+    task: Literal[
+        "single_stock_analysis",
+        "market_screener",
+        "watchlist_ranking",
+        "event_drill_down",
+        "backtest",
+        "alert_setup",
+    ]
+    confidence: float = Field(ge=0.0, le=1.0)
+    rationale: str
+
+
+class EventCluster(BaseModel):
+    event_id: str
+    ticker: str
+    company: str
+    headline: str
+    summary: str
+    sentiment: Literal["positive", "neutral", "negative"]
+    weighted_score: float
+    article_count: int
+    sources: list[str]
+
+
+class MarketSignal(BaseModel):
+    ticker: str
+    company: str
+    market: Literal["US", "India"]
+    cap_bucket: Literal["large", "mid", "small"]
+    benchmark_symbol: str
+    data_source: str
+    gap_pct: float
+    abnormal_volume: float
+    realized_vol_20d: float
+    beta_proxy: float
+    benchmark_move_5d: float
+    momentum_5d: float
+    momentum_20d: float
+    diagnostics: list[str] = Field(default_factory=list)
+
+
+class AdvancedScreenResult(BaseModel):
+    ticker: str
+    company: str
+    market: Literal["US", "India"]
+    cap_bucket: Literal["large", "mid", "small"]
+    overall_score: float
+    tomorrow_up_probability: float = Field(ge=0.0, le=1.0)
+    next_week_up_probability: float = Field(ge=0.0, le=1.0)
+    expected_tomorrow_move_pct: float
+    expected_week_move_pct: float
+    recommendation: str
+    reasons: list[str]
+    top_events: list[EventCluster]
+    diagnostics: list[str] = Field(default_factory=list)
