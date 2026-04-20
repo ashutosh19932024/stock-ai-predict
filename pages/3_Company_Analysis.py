@@ -21,7 +21,8 @@ if st.button("Analyze company", type="primary"):
     if not settings.use_mock_data and not result.evidence:
         st.warning(
             "No live evidence was returned for this company. The prediction is therefore neutral/low-confidence "
-            "instead of using dummy mock news. Check NewsAPI credentials, API quota, and provider availability."
+            "instead of using dummy mock news. Check NewsAPI credentials, API quota, Yahoo Finance RSS availability, "
+            "and Streamlit secrets."
         )
 
     st.subheader("Drivers")
