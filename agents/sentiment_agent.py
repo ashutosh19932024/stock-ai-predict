@@ -24,6 +24,7 @@ class SentimentAgent:
             company=item.company or (item.ticker or "UNKNOWN"),
         )
         if structured:
+            structured = self._sanitize_structured_sentiment(structured, item)
             return SentimentRecord(
                 **structured,
                 source=item.source,
@@ -61,3 +62,25 @@ class SentimentAgent:
             title=item.title,
             url=item.url,
         )
+
+    def _sanitize_structured_sentiment(self, structured: dict, item: NewsItem) -> dict:
+        sentiment = str(structured.get("sentiment", "neutral")).lower()
+        if sentiment not in {"positive", "neutral", "negative"}:
+            sentiment = "neutral"
+
+        return {
+            "ticker": str(structured.get("ticker") or item.ticker or "UNKNOWN"),
+            "company": str(structured.get("company") or item.company or item.ticker or "UNKNOWN"),
+            "sentiment": sentiment,
+            "event_type": str(structured.get("event_type") or "general_news"),
+            "impact_strength": clamp(self._safe_float(structured.get("impact_strength"), 0.45), 0.0, 1.0),
+            "horizon_days": int(clamp(self._safe_float(structured.get("horizon_days"), 1), 1, 30)),
+            "confidence": clamp(self._safe_float(structured.get("confidence"), 0.55), 0.0, 1.0),
+            "summary": str(structured.get("summary") or item.content[:240] or item.title),
+        }
+
+    def _safe_float(self, value, default: float) -> float:
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return default

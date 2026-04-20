@@ -22,9 +22,9 @@ class OpenAIService:
                 "company": {"type": "string"},
                 "sentiment": {"type": "string", "enum": ["positive", "neutral", "negative"]},
                 "event_type": {"type": "string"},
-                "impact_strength": {"type": "number"},
-                "horizon_days": {"type": "integer"},
-                "confidence": {"type": "number"},
+                "impact_strength": {"type": "number", "minimum": 0, "maximum": 1},
+                "horizon_days": {"type": "integer", "minimum": 1, "maximum": 30},
+                "confidence": {"type": "number", "minimum": 0, "maximum": 1},
                 "summary": {"type": "string"},
             },
             "required": [
@@ -49,6 +49,7 @@ class OpenAIService:
                         "content": (
                             "You are a financial news extraction assistant. "
                             "Return only structured JSON according to the schema. "
+                            "Use impact_strength and confidence as decimal values between 0 and 1. "
                             "Do not give investment advice."
                         ),
                     },
