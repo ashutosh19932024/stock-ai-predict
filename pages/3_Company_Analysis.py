@@ -3,6 +3,7 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 from agents.orchestrator import StockAnalysisOrchestrator
+from utils.config import settings
 
 st.title("Company Analysis")
 
@@ -17,6 +18,12 @@ if st.button("Analyze company", type="primary"):
 
     st.write(result.answer)
 
+    if not settings.use_mock_data and not result.evidence:
+        st.warning(
+            "No live evidence was returned for this company. The prediction is therefore neutral/low-confidence "
+            "instead of using dummy mock news. Check NewsAPI credentials, API quota, and provider availability."
+        )
+
     st.subheader("Drivers")
     for item in result.prediction.drivers:
         st.write(f"- {item}")
@@ -27,7 +34,19 @@ if st.button("Analyze company", type="primary"):
 
     st.subheader("Evidence table")
     df = pd.DataFrame([e.model_dump() for e in result.evidence])
-    st.dataframe(df, width="stretch", hide_index=True)
+    if df.empty:
+        st.info("No evidence rows available from live providers.")
+    else:
+        display_columns = [
+            "published_at",
+            "source",
+            "source_type",
+            "sentiment",
+            "impact_strength",
+            "title",
+            "url",
+        ]
+        st.dataframe(df[display_columns], width="stretch", hide_index=True)
 
     if not df.empty:
         counts = df["sentiment"].value_counts()

@@ -20,11 +20,14 @@ class NewsService:
         return [NewsItem(**item) for item in dedupe_records(records)]
 
     def search(self, query: str, ticker: str | None = None, page_size: int = 10) -> list[NewsItem]:
-        if settings.use_mock_data or not settings.newsapi_key:
+        if settings.use_mock_data:
             return self._mock_results(query=query, ticker=ticker)
+        if not settings.newsapi_key:
+            logger.warning("News API key missing; returning no live news for %s.", query)
+            return []
 
         params = {
-            "q": query,
+            "q": f'("{query}" OR {ticker}) stock',
             "pageSize": page_size,
             "sortBy": "publishedAt",
             "language": "en",
@@ -36,7 +39,7 @@ class NewsService:
             payload = response.json()
         except requests.RequestException as exc:
             logger.warning("News API request failed for %s: %s", query, exc)
-            return self._mock_results(query=query, ticker=ticker)
+            return []
 
         articles = []
         for article in payload.get("articles", []):
