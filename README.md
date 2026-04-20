@@ -53,6 +53,21 @@ DEFAULT_MARKET=US
 streamlit run app.py
 ```
 
+## Deploy On Streamlit Cloud
+Do not commit `.env` to GitHub. For Streamlit Cloud, add the same values in **App settings → Secrets**:
+
+```toml
+OPENAI_API_KEY = "your_openai_key"
+OPENAI_MODEL = "gpt-5-mini"
+NEWSAPI_KEY = "your_newsapi_key"
+ALPHAVANTAGE_API_KEY = "your_alphavantage_key"
+X_BEARER_TOKEN = "your_x_token"
+USE_MOCK_DATA = "false"
+DEFAULT_MARKET = "US"
+```
+
+The sidebar shows the active config source as `.env file`, `environment variables`, or `Streamlit secrets`.
+
 ## How It Works
 1. `CompanyService` resolves tickers or company names and normalizes common US and India symbols.
 2. `NewsAgent` gathers content from news, official updates, and social posts.

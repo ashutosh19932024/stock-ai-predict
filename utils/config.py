@@ -32,16 +32,58 @@ def _clean_env_value(value: str | None) -> str:
     return cleaned
 
 
+def _read_streamlit_secret(name: str) -> str:
+    try:
+        import streamlit as st
+
+        value = st.secrets.get(name, "")
+        return str(value).strip() if value else ""
+    except Exception:
+        return ""
+
+
+def _read_setting(name: str, default: str = "") -> str:
+    env_value = _clean_env_value(os.getenv(name))
+    if env_value:
+        return env_value
+
+    secret_value = _clean_env_value(_read_streamlit_secret(name))
+    if secret_value:
+        return secret_value
+
+    return default
+
+
+def _detect_config_source() -> str:
+    if active_env_file:
+        return f".env file: {active_env_file}"
+
+    known_keys = (
+        "OPENAI_API_KEY",
+        "NEWSAPI_KEY",
+        "ALPHAVANTAGE_API_KEY",
+        "X_BEARER_TOKEN",
+        "USE_MOCK_DATA",
+        "DEFAULT_MARKET",
+    )
+    if any(_clean_env_value(os.getenv(key)) for key in known_keys):
+        return "environment variables"
+    if any(_read_streamlit_secret(key) for key in known_keys):
+        return "Streamlit secrets"
+    return "No .env file, environment variables, or Streamlit secrets found."
+
+
 @dataclass(slots=True)
 class Settings:
-    openai_api_key: str = _clean_env_value(os.getenv("OPENAI_API_KEY"))
-    openai_model: str = os.getenv("OPENAI_MODEL", "gpt-5-mini")
-    newsapi_key: str = _clean_env_value(os.getenv("NEWSAPI_KEY"))
-    alphavantage_api_key: str = _clean_env_value(os.getenv("ALPHAVANTAGE_API_KEY"))
-    x_bearer_token: str = _clean_env_value(os.getenv("X_BEARER_TOKEN"))
-    use_mock_data: bool = _to_bool(os.getenv("USE_MOCK_DATA"), default=True)
-    default_market: str = os.getenv("DEFAULT_MARKET", "US")
-    env_file_used: str = str(active_env_file) if active_env_file else "No .env file found. Create a .env file in the project root."
+    openai_api_key: str = _read_setting("OPENAI_API_KEY")
+    openai_model: str = _read_setting("OPENAI_MODEL", "gpt-5-mini")
+    newsapi_key: str = _read_setting("NEWSAPI_KEY")
+    alphavantage_api_key: str = _read_setting("ALPHAVANTAGE_API_KEY")
+    x_bearer_token: str = _read_setting("X_BEARER_TOKEN")
+    use_mock_data: bool = _to_bool(_read_setting("USE_MOCK_DATA"), default=True)
+    default_market: str = _read_setting("DEFAULT_MARKET", "US")
+    config_source: str = _detect_config_source()
+    env_file_used: str = _detect_config_source()
 
 
 settings = Settings()

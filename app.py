@@ -25,9 +25,9 @@ with st.sidebar:
     st.header("Settings")
     st.write(f"Mock data: **{settings.use_mock_data}**")
     st.write(f"Default market: **{settings.default_market}**")
-    st.caption(f"Config file: `{settings.env_file_used}`")
+    st.caption(f"Config source: `{settings.config_source}`")
     if not settings.newsapi_key or not settings.alphavantage_api_key:
-        st.warning("Live mode still needs valid `NEWSAPI_KEY` and `ALPHAVANTAGE_API_KEY` in the active env file.")
+        st.warning("Live mode still needs valid `NEWSAPI_KEY` and `ALPHAVANTAGE_API_KEY` in `.env`, environment variables, or Streamlit secrets.")
     ticker = st.text_input("Add ticker to watchlist", value="")
     if st.button("Add", width="stretch") and ticker:
         t = ticker.upper().strip()
