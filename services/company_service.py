@@ -5,11 +5,13 @@ from functools import lru_cache
 
 import requests
 
+from services.universe_service import UNIVERSE, get_universe
 from utils.config import settings
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+# Minimal essential mappings for common variations
 COMPANY_MAP = {
     "AAPL": "Apple",
     "TSLA": "Tesla",
@@ -18,11 +20,9 @@ COMPANY_MAP = {
     "GOOGL": "Alphabet",
     "META": "Meta",
     "AMZN": "Amazon",
-    "TCS": "Tata Consultancy Services",
-    "INFY": "Infosys",
-    "RELIANCE": "Reliance Industries",
 }
 
+# Essential aliases for common variations
 _ALIASES = {
     "APPLE": "AAPL",
     "TESLA": "TSLA",
@@ -33,18 +33,6 @@ _ALIASES = {
     "META": "META",
     "FACEBOOK": "META",
     "AMAZON": "AMZN",
-    "TATA CONSULTANCY SERVICES": "TCS",
-    "TCS": "TCS",
-    "TCS.NS": "TCS",
-    "TCS.NSE": "TCS",
-    "INFOSYS": "INFY",
-    "INFY": "INFY",
-    "INFY.NS": "INFY",
-    "INFY.NSE": "INFY",
-    "RELIANCE INDUSTRIES": "RELIANCE",
-    "RELIANCE": "RELIANCE",
-    "RELIANCE.NS": "RELIANCE",
-    "RELIANCE.NSE": "RELIANCE",
 }
 
 
@@ -57,9 +45,7 @@ class ResolvedSecurity:
 
 
 _HISTORICAL_SYMBOL_CANDIDATES = {
-    "TCS": ["TCS.NS", "TCS.BO", "TCS"],
-    "INFY": ["INFY.NS", "INFY.BO", "INFY"],
-    "RELIANCE": ["RELIANCE.NS", "RELIANCE.BO", "RELIANCE"],
+    # Will be populated dynamically from universe
 }
 
 
@@ -153,6 +139,7 @@ def resolve_security(query: str) -> ResolvedSecurity:
 
     upper_query = normalized.upper()
 
+    # Check local aliases first
     local_ticker = _ALIASES.get(upper_query)
     if local_ticker:
         return ResolvedSecurity(
@@ -161,14 +148,52 @@ def resolve_security(query: str) -> ResolvedSecurity:
             matched_by="local_alias",
         )
 
+    # Check local company map
     if upper_query in COMPANY_MAP:
         return ResolvedSecurity(ticker=upper_query, company=COMPANY_MAP[upper_query], matched_by="local_map")
 
+    # Search universe for any market/cap combination
+    for market in UNIVERSE:
+        for cap_bucket in UNIVERSE[market]:
+            for stock in UNIVERSE[market][cap_bucket]:
+                ticker = stock["ticker"].upper()
+                company = stock["company"]
+                
+                # Match by ticker
+                if upper_query == ticker:
+                    return ResolvedSecurity(
+                        ticker=ticker, 
+                        company=company, 
+                        region=market, 
+                        matched_by="universe_ticker"
+                    )
+                
+                # Match by company name (case insensitive)
+                if upper_query == company.upper():
+                    return ResolvedSecurity(
+                        ticker=ticker, 
+                        company=company, 
+                        region=market, 
+                        matched_by="universe_company"
+                    )
+                
+                # Match by ticker without suffix (.NS, .BO, etc.)
+                if upper_query == ticker.split('.')[0]:
+                    return ResolvedSecurity(
+                        ticker=ticker, 
+                        company=company, 
+                        region=market, 
+                        matched_by="universe_ticker_base"
+                    )
+
+    # Try Alpha Vantage API for dynamic lookup
     dynamic_match = _search_alpha_vantage(normalized)
     if dynamic_match:
         return dynamic_match
 
-    return ResolvedSecurity(ticker=upper_query, company=normalized, matched_by="fallback_raw_input")
+    # Final fallback - use query as ticker, try to make it look like a company name
+    company_name = normalized.replace('.', ' ').replace('_', ' ').title()
+    return ResolvedSecurity(ticker=upper_query, company=company_name, matched_by="fallback_raw_input")
 
 
 def resolve_company_name(ticker_or_query: str) -> str:
@@ -180,24 +205,45 @@ def get_historical_symbol_candidates(ticker: str) -> list[str]:
     if not normalized:
         return []
 
-    candidates = _HISTORICAL_SYMBOL_CANDIDATES.get(normalized, [normalized])
+    candidates = [normalized]
 
-    # Normalize Indian exchange suffix variants across providers.
+    # Check if ticker exists in universe and add variations
+    for market in UNIVERSE:
+        for cap_bucket in UNIVERSE[market]:
+            for stock in UNIVERSE[market][cap_bucket]:
+                universe_ticker = stock["ticker"].upper()
+                if normalized == universe_ticker or normalized == universe_ticker.split('.')[0]:
+                    # Add the full universe ticker
+                    if universe_ticker not in candidates:
+                        candidates.append(universe_ticker)
+                    
+                    # For Indian stocks, add exchange variations
+                    if market == "India" and '.' not in universe_ticker:
+                        candidates.extend([
+                            f"{universe_ticker}.NS",
+                            f"{universe_ticker}.BO", 
+                            f"{universe_ticker}.NSE",
+                            f"{universe_ticker}.BSE"
+                        ])
+
+    # Normalize Indian exchange suffix variants across providers
     if normalized.endswith(".BSE"):
         base = normalized[:-4]
-        candidates = [f"{base}.BO", normalized, base, f"{base}.NS"] + candidates
+        candidates.extend([f"{base}.BO", normalized, base, f"{base}.NS"])
     elif normalized.endswith(".BO"):
         base = normalized[:-3]
-        candidates = [normalized, f"{base}.BSE", base, f"{base}.NS"] + candidates
+        candidates.extend([normalized, f"{base}.BSE", base, f"{base}.NS"])
     elif normalized.endswith(".NSE"):
         base = normalized[:-4]
-        candidates = [f"{base}.NS", normalized, base, f"{base}.BO"] + candidates
+        candidates.extend([f"{base}.NS", normalized, base, f"{base}.BO"])
     elif normalized.endswith(".NS"):
         base = normalized[:-3]
-        candidates = [normalized, f"{base}.NSE", base, f"{base}.BO"] + candidates
+        candidates.extend([normalized, f"{base}.NSE", base, f"{base}.BO"])
 
+    # Remove duplicates while preserving order
     deduped = []
     for candidate in candidates:
         if candidate not in deduped:
             deduped.append(candidate)
+    
     return deduped
