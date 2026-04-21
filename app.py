@@ -13,10 +13,14 @@ if get_script_run_ctx() is None:
 st.set_page_config(page_title="Agentic Stock News AI", page_icon="📈", layout="wide")
 
 repo = JsonRepository()
-watchlist = repo.read().get("watchlist", ["AAPL", "TSLA", "NVDA"])
+repo_state = repo.read()
+watchlist = repo_state.get("watchlist", ["AAPL", "TSLA", "NVDA"])
+selected_market = repo_state.get("selected_market", settings.default_market)
 
 if "watchlist" not in st.session_state:
     st.session_state.watchlist = watchlist
+if "selected_market" not in st.session_state:
+    st.session_state.selected_market = selected_market
 
 st.title("📈 Agentic Stock News AI")
 st.caption("News + social + official updates + market snapshot → next-day directional signal")
@@ -24,7 +28,14 @@ st.caption("News + social + official updates + market snapshot → next-day dire
 with st.sidebar:
     st.header("Settings")
     st.write(f"Mock data: **{settings.use_mock_data}**")
-    st.write(f"Default market: **{settings.default_market}**")
+    selected_market = st.selectbox(
+        "Analysis market",
+        options=["US", "India"],
+        index=0 if st.session_state.selected_market == "US" else 1,
+    )
+    if selected_market != st.session_state.selected_market:
+        st.session_state.selected_market = selected_market
+        repo.write({"watchlist": st.session_state.watchlist, "selected_market": selected_market})
     st.caption(f"Config source: `{settings.config_source}`")
     if not settings.newsapi_key or not settings.alphavantage_api_key:
         st.warning("Live mode still needs valid `NEWSAPI_KEY` and `ALPHAVANTAGE_API_KEY` in `.env`, environment variables, or Streamlit secrets.")
@@ -33,7 +44,7 @@ with st.sidebar:
         t = ticker.upper().strip()
         if t not in st.session_state.watchlist:
             st.session_state.watchlist.append(t)
-            repo.write({"watchlist": st.session_state.watchlist})
+            repo.write({"watchlist": st.session_state.watchlist, "selected_market": st.session_state.selected_market})
             st.success(f"Added {t}")
 
 col1, col2 = st.columns([1.6, 1])

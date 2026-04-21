@@ -8,6 +8,7 @@ import requests
 from services.universe_service import UNIVERSE, get_universe
 from utils.config import settings
 from utils.logger import get_logger
+from utils.runtime_context import get_active_market
 
 logger = get_logger(__name__)
 
@@ -59,7 +60,7 @@ def _preferred_regions(query: str) -> set[str]:
         return {"India"}
     if " INDIA" in f" {normalized} " or " NSE" in f" {normalized} " or " BSE" in f" {normalized} ":
         return {"India"}
-    if settings.default_market.upper() in {"IN", "INDIA"}:
+    if get_active_market() == "India":
         return {"India"}
     return {"United States", "Canada", "India"}
 
@@ -152,8 +153,11 @@ def resolve_security(query: str) -> ResolvedSecurity:
     if upper_query in COMPANY_MAP:
         return ResolvedSecurity(ticker=upper_query, company=COMPANY_MAP[upper_query], matched_by="local_map")
 
-    # Search universe for any market/cap combination
-    for market in UNIVERSE:
+    active_market = get_active_market()
+    market_order = [active_market, "India" if active_market == "US" else "US"]
+
+    # Search universe preferring the currently selected app market
+    for market in market_order:
         for cap_bucket in UNIVERSE[market]:
             for stock in UNIVERSE[market][cap_bucket]:
                 ticker = stock["ticker"].upper()

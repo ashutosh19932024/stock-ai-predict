@@ -4,8 +4,10 @@ import pandas as pd
 import streamlit as st
 from agents.orchestrator import StockAnalysisOrchestrator
 from utils.config import settings
+from utils.runtime_context import get_active_market
 
 st.title("Company Analysis")
+st.caption(f"Active market preference: {get_active_market()}")
 
 identifier = st.text_input("Ticker or Company", value="AAPL").strip()
 if st.button("Analyze company", type="primary"):
@@ -51,7 +53,18 @@ if st.button("Analyze company", type="primary"):
             "title",
             "url",
         ]
-        st.dataframe(df[display_columns], width="stretch", hide_index=True)
+        display_df = df[display_columns].copy()
+        display_df["url"] = display_df["url"].fillna("")
+        st.dataframe(
+            display_df,
+            width="stretch",
+            hide_index=True,
+            column_config={
+                "published_at": st.column_config.DatetimeColumn("published_at"),
+                "impact_strength": st.column_config.NumberColumn("impact_strength", format="%.2f"),
+                "url": st.column_config.LinkColumn("url", display_text="Open source"),
+            },
+        )
 
     if not df.empty:
         counts = df["sentiment"].value_counts()

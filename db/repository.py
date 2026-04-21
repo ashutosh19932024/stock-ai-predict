@@ -10,10 +10,15 @@ class JsonRepository:
         self.file_path = Path(file_path)
         self.file_path.parent.mkdir(parents=True, exist_ok=True)
         if not self.file_path.exists():
-            self.file_path.write_text(json.dumps({"watchlist": ["AAPL", "TSLA", "NVDA"]}, indent=2))
+            self.file_path.write_text(
+                json.dumps({"watchlist": ["AAPL", "TSLA", "NVDA"], "selected_market": "US"}, indent=2)
+            )
 
     def read(self) -> dict[str, Any]:
-        return json.loads(self.file_path.read_text())
+        payload = json.loads(self.file_path.read_text())
+        payload.setdefault("watchlist", ["AAPL", "TSLA", "NVDA"])
+        payload.setdefault("selected_market", "US")
+        return payload
 
     def write(self, payload: dict[str, Any]) -> None:
         self.file_path.write_text(json.dumps(payload, indent=2))

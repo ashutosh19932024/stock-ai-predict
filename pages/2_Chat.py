@@ -4,6 +4,7 @@ import streamlit as st
 from agents.orchestrator import StockAnalysisOrchestrator
 from services.company_service import COMPANY_MAP, resolve_security
 from utils.config import settings
+from utils.runtime_context import get_active_market
 
 
 def is_live_source_url(url: str) -> bool:
@@ -230,6 +231,8 @@ def build_market_scan_content(prompt: str, tickers: list[str]) -> str:
         "",
         f"Question: {prompt}",
         "",
+        f"Active market: {get_active_market()}",
+        "",
         f"Scanned universe: {', '.join(tickers)}",
         "",
         "Ranked by positive-news count first, then sentiment balance, evidence strength, and model up-probability.",
@@ -298,9 +301,18 @@ if prompt:
     with st.chat_message("assistant"):
         with st.spinner("Running news and prediction agents..."):
             if is_market_scan_prompt(prompt):
-                scan_tickers = st.session_state.get("watchlist", list(COMPANY_MAP.keys()))
-                fallback_universe = [ticker for ticker in COMPANY_MAP if ticker not in scan_tickers]
-                content = build_market_scan_content(prompt, scan_tickers + fallback_universe[:5])
+                market = get_active_market()
+                if market == "India":
+                    fallback_universe = ["TCS", "INFY", "RELIANCE", "SBIN.NS", "LT.NS", "ITC.NS"]
+                else:
+                    fallback_universe = ["AAPL", "MSFT", "NVDA", "AMZN", "GOOGL", "META", "TSLA"]
+                scan_tickers = st.session_state.get("watchlist", [])
+                filtered_watchlist = [
+                    ticker for ticker in scan_tickers
+                    if (market == "India" and (".NS" in ticker or ".BO" in ticker or ticker in {"TCS", "INFY", "RELIANCE"}))
+                    or (market == "US" and ".NS" not in ticker and ".BO" not in ticker)
+                ]
+                content = build_market_scan_content(prompt, filtered_watchlist + [t for t in fallback_universe if t not in filtered_watchlist][:8])
             else:
                 ticker = extract_ticker(prompt)
                 if not ticker:

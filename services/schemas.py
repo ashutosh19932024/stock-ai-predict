@@ -12,7 +12,7 @@ class NewsItem(BaseModel):
     content: str
     ticker: str | None = None
     company: str | None = None
-    source_type: Literal["news", "official", "social"] = "news"
+    source_type: Literal["news", "official", "social", "conference"] = "news"
 
 
 class SentimentRecord(BaseModel):

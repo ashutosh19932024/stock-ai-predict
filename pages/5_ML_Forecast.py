@@ -10,6 +10,7 @@ import streamlit as st
 from ml.weekly_forecast import WeeklyForecastModel
 from services.company_service import resolve_security
 from services.historical_data_service import HistoricalMarketDataService
+from utils.runtime_context import get_active_market
 
 
 def filter_display_frame(frame: pd.DataFrame, preset: str, custom_start, custom_end) -> pd.DataFrame:
@@ -34,6 +35,7 @@ def filter_display_frame(frame: pd.DataFrame, preset: str, custom_start, custom_
 
 st.title("ML Forecast")
 st.caption("Train a machine learning model on up to 10 years of daily data and predict next-week direction.")
+st.caption(f"Active market preference: {get_active_market()}")
 
 with st.form("ml_forecast_form"):
     c1, c2 = st.columns([2, 1])
